@@ -2,11 +2,10 @@
                  Inverso Studio
 =====================================================
 
-Top-Down Vehicle Controller – Arcade System
+Top-Down Vehicle Controller â€“ Arcade System
 
 Document:
-#Architecture
-
+Architecture
 
 Version: 0.1.0
 
@@ -14,14 +13,20 @@ Author:
 Edison Oliveira
 
 Engine:
-Unity 2021.3.45f1 LTS (Minimum Supported Version)
-Compatible up to Unity 6 LTS
+Unity 2022.3.62f3 LTS (Official Development Version)
+
+Minimum Supported Version Candidate:
+Unity 2021.3.45f2 LTS (Pending Validation)
+
+Compatibility:
+Unity 2022.3.62f3 LTS (Validated)
+Unity 2021.3.45f2 LTS (Pending Validation)
+Unity 6 LTS (Not Yet Validated)
 
 Language:
 C#
 
 =====================================================
-
 
 # Architecture
 
@@ -31,7 +36,7 @@ C#
 
 # Purpose
 
-This document defines the architectural principles, module organization and communication rules adopted by the Top-Down Vehicle Controller - Arcade System.
+This document defines the architectural principles, module organization, dependency boundaries, and communication rules adopted by the Top-Down Vehicle Controller â€“ Arcade System.
 
 All framework systems must follow this architecture.
 
@@ -39,15 +44,15 @@ All framework systems must follow this architecture.
 
 # Architecture Goals
 
-* Modular design
-* Independent systems
-* Low coupling
-* High cohesion
-* Scalability
-* Maintainability
-* Extensibility
-* Reusability
-* Production-ready quality
+- Modular design
+- Independent systems
+- Low coupling
+- High cohesion
+- Scalability
+- Maintainability
+- Extensibility
+- Reusability
+- Production-ready quality
 
 ---
 
@@ -59,34 +64,38 @@ Each module has a single responsibility.
 
 Each system should be replaceable without affecting unrelated systems.
 
-Business logic must remain inside its corresponding system.
+Gameplay logic must remain inside its corresponding system.
 
-The architecture favors composition over inheritance.]
+The architecture favors composition over inheritance.
 
-Systems own behavior. Configurations own values. Context owns references.
+**Systems own behavior. Configurations own values. Context owns references.**
 
-Discover systems. Configure behavior. Compose vehicles.
+**Discover systems. Configure behavior. Compose vehicles.**
+
+Architecture must support gameplay quality and development efficiency.
 
 ---
 
 # Framework Structure
 
+The framework is organized into the following principal directories:
+
 ```text
 TopDownVehicleController
-?
-??? Audio
-??? Core
-??? Data
-??? Demo
-??? Documentation
-??? Editor
-??? Gizmos
-??? Input
-??? Models
-??? Prefabs
-??? Settings
-??? Vehicle
+|
++-- Audio
++-- Core
++-- Data
++-- Demo
++-- Documentation
++-- Input
++-- Models
++-- Vehicle
 ```
+
+Additional directories may be introduced when required by the architecture.
+
+Editor extensions, Gizmos, and configuration resources must remain organized according to their responsibilities.
 
 ---
 
@@ -94,26 +103,26 @@ TopDownVehicleController
 
 ## Core
 
-Shared functionality used by every module.
+Shared functionality used by framework modules.
 
 Contains:
 
-* Interfaces
-* Utilities
-* Extensions
-* Events
-* Attributes
-* Shared data structures
+- Interfaces
+- Utilities
+- Extensions
+- Events
+- Attributes
+- Shared data structures
 
-The Core module must remain completely independent.
+The Core module must remain independent of higher-level modules.
 
 It must never reference:
 
-* Vehicle
-* Audio
-* Input
-* Demo
-* Editor
+- Vehicle
+- Audio
+- Input
+- Demo
+- Editor
 
 Every other module may reference Core.
 
@@ -121,49 +130,51 @@ Every other module may reference Core.
 
 ## Vehicle
 
-Contains every gameplay system related to the vehicle.
+Contains gameplay systems related to vehicle behavior.
 
 Responsibilities:
 
-* VehicleController
-* Movement
-* Suspension
-* Detection
-* Vehicle Effects
-* Vehicle Data
-* Vehicle Interfaces
+- VehicleController
+- Movement
+- Suspension
+- Detection
+- Vehicle Effects
+- Vehicle Data
+- Vehicle Interfaces
 
-Vehicle-specific gameplay logic belongs only here.
+Vehicle-specific gameplay logic belongs in this module.
 
 ---
 
 ## Input
 
-Responsible for player input.
+Responsible for player input abstraction.
 
-Uses Unity Input System.
+Uses the Unity Input System.
 
 Responsibilities:
 
-* Input Providers
-* Input Actions
-* Input Abstraction
+- Input Providers
+- Input Actions
+- Input Abstraction
 
-No gameplay logic should exist inside this module.
+No vehicle gameplay logic should exist inside this module.
 
 ---
 
 ## Audio
 
-Responsible for every audio system.
+Responsible for shared audio functionality and related resources.
 
 Responsibilities:
 
-* Engine Audio
-* Surface Audio
-* Audio Configurations
+- Engine Audio Resources
+- Surface Audio Resources
+- Audio Configurations
 
-Audio must not implement gameplay logic.
+Vehicle-specific audio behavior may be implemented within the Vehicle module while respecting module boundaries.
+
+Audio systems must not implement unrelated gameplay logic.
 
 ---
 
@@ -173,42 +184,48 @@ Contains demonstration assets.
 
 Includes:
 
-* Scenes
-* Prefabs
-* Scripts
-* Materials
+- Scenes
+- Prefabs
+- Scripts
+- Materials
+- Textures
+- Sample Configurations
 
-The Demo module must never be required for the framework to function.
+The Demo module must never be required for the core framework to function.
 
 ---
 
 ## Documentation
 
-Contains all project documentation.
+Contains project documentation, architecture decisions, coding standards, and development records.
 
-No runtime assets.
+No runtime gameplay logic belongs in this directory.
 
 ---
 
 ## Editor
 
-Contains Unity Editor extensions.
+Reserved for Unity Editor extensions.
 
 Editor scripts must never be included in runtime assemblies.
 
+Editor functionality must not become a mandatory runtime dependency.
+
 ---
 
-## Settings
+## Settings and Configurations
 
-Contains project configuration assets.
+Configuration assets should be organized according to their purpose.
 
 Examples:
 
-* Default Vehicle Config
-* Default Surface Config
-* Default Audio Config
+- Default Vehicle Config
+- Default Surface Config
+- Default Audio Config
 
-Only asset files should exist here.
+Runtime configuration types belong to their respective modules.
+
+Unity project rendering settings are separate from vehicle gameplay configurations.
 
 ---
 
@@ -216,18 +233,18 @@ Only asset files should exist here.
 
 ```text
 Core
-?
-??? Attributes
-??? Data
-??? Events
-??? Extensions
-??? Interfaces
-??? Utilities
+|
++-- Attributes
++-- Data
++-- Events
++-- Extensions
++-- Interfaces
++-- Utilities
 ```
 
-Every module depends on Core.
+Every framework module may depend on Core.
 
-Core depends on no other module.
+Core depends on no higher-level framework module.
 
 ---
 
@@ -235,33 +252,39 @@ Core depends on no other module.
 
 ```text
 Vehicle
-?
-??? Controllers
-??? Data
-??? Interfaces
-??? ScriptableObjects
-??? Systems
-    ??? Audio
-    ??? Detection
-    ??? Effects
-    ??? Movement
-    ??? Suspension
+|
++-- Configurations
++-- Controllers
++-- Data
++-- Interfaces
++-- Prefabs
++-- Systems
+    |
+    +-- Audio
+    +-- Detection
+    +-- Effects
+    +-- Movement
+    +-- Suspension
 ```
+
+The Vehicle module is organized around independent systems coordinated by the VehicleController.
 
 ---
 
 # VehicleController
 
-VehicleController is the central coordinator.
+VehicleController is the central coordinator of vehicle systems.
 
 Responsibilities:
 
-* Initialize systems
-* Hold references
-* Coordinate execution
-* Dispatch events
+- Initialize systems
+- Hold and distribute required references
+- Coordinate execution
+- Dispatch relevant events
 
-VehicleController must not implement gameplay logic.
+VehicleController must not implement individual gameplay systems.
+
+Movement, suspension, detection, audio, and effects must remain within their respective components.
 
 ---
 
@@ -271,53 +294,62 @@ VehicleController must not implement gameplay logic.
 
 Controls vehicle movement.
 
-Only movement logic.
+Responsible for movement-related behavior.
+
+Movement logic must not be duplicated in unrelated systems.
 
 ---
 
 ## Suspension
 
-Controls suspension simulation.
+Controls vehicle suspension simulation.
 
-Only suspension logic.
+Responsible for suspension behavior, ground interaction, and associated vehicle stabilization.
+
+Suspension logic must remain isolated from unrelated gameplay systems.
 
 ---
 
 ## Detection
 
-Handles collision detection.
+Handles environment and obstacle detection.
 
-Ground detection.
+Examples:
 
-Obstacle detection.
+- Ground Detection
+- Obstacle Detection
+- Surface Detection
 
-Surface detection.
+Detection systems provide information to other systems without taking ownership of unrelated behavior.
 
 ---
 
 ## Effects
 
-Controls visual effects.
+Controls vehicle visual effects.
 
-Particles.
+Examples:
 
-Trails.
+- Particles
+- Trails
+- Dust
+- Surface Effects
 
-Dust.
-
-Surface effects.
+Visual effects should react to vehicle state and environmental information.
 
 ---
 
 ## Audio
 
-Coordinates vehicle audio.
+Coordinates vehicle-related audio behavior.
 
-Engine sounds.
+Examples:
 
-Surface sounds.
+- Engine Sounds
+- Surface Sounds
+- Movement Feedback
 
-Movement feedback.
+Audio systems should react to relevant vehicle states without controlling vehicle movement.
 
 ---
 
@@ -333,66 +365,81 @@ Avoid direct dependencies whenever possible.
 
 Avoid circular references.
 
+Communication must preserve clear ownership of responsibilities.
+
 ---
 
 # Dependency Flow
 
+Dependencies must follow the framework's architectural boundaries.
+
 ```text
-             Vehicle
-                ?
-                ?
-             Input
-                ?
-                ?
-             Audio
-                ?
-                ?
-              Core
+Vehicle ------> Core
+   |
+   +----------> Input abstractions
+   |
+   +----------> Audio abstractions
+
+Input --------> Core
+
+Audio --------> Core
+
+Demo ---------> Framework modules
 ```
+
+The diagram represents permitted architectural relationships, not a mandatory dependency for every system.
 
 Core never references higher-level modules.
 
-Dependencies always point toward Core.
+Dependencies must not create circular references.
 
 ---
 
 # Data Flow
 
+A typical vehicle execution flow is:
+
 ```text
 Player Input
-      ?
-      ?
+     |
+     v
 Input Provider
-      ?
-      ?
+     |
+     v
 VehicleController
-      ?
-      ?
-Movement System
-      ?
-      ?
-Suspension
-      ?
-      ?
-Effects
-      ?
-      ?
-Audio
+     |
+     +----> Movement System
+     |
+     +----> Suspension System
+     |
+     +----> Detection Systems
+     |
+     +----> Effects Systems
+     |
+     +----> Audio Systems
 ```
+
+The VehicleController coordinates execution.
+
+Individual systems own their behavior.
+
+Systems may exchange information through the approved communication mechanisms.
+
+The diagram is conceptual and does not prescribe a strict sequential execution order.
 
 ---
 
 # Script Responsibilities
 
-Every script must answer the following questions before implementation.
+Every script must answer the following questions before implementation:
 
-* What is its responsibility?
-* Which module does it belong to?
-* Who consumes it?
-* What are its dependencies?
-* How does it communicate?
-* How can it be replaced?
-* How will it be tested?
+- What is its responsibility?
+- Which module does it belong to?
+- Who consumes it?
+- What are its dependencies?
+- How does it communicate?
+- How can it be replaced?
+- How will it be tested?
 
 Implementation begins only after these questions are answered.
 
@@ -400,35 +447,39 @@ Implementation begins only after these questions are answered.
 
 # Dependency Rules
 
-Allowed
+## Allowed
 
 ```text
-Vehicle ? Core
+Vehicle -> Core
 
-Input ? Core
+Input -> Core
 
-Audio ? Core
+Audio -> Core
 
-Demo ? Core
+Demo -> Core
 
-Vehicle ? Input
+Vehicle -> Input abstractions
 
-Vehicle ? Audio
+Vehicle -> Audio abstractions
 ```
 
-Not Allowed
+These relationships must remain intentional and must not introduce circular dependencies.
+
+## Not Allowed
 
 ```text
-Core ? Vehicle
+Core -> Vehicle
 
-Core ? Audio
+Core -> Audio
 
-Core ? Input
+Core -> Input
 
-Audio ? Vehicle
+Audio -> Vehicle
 
-Input ? Audio
+Input -> Audio
 ```
+
+Higher-level gameplay modules must not become dependencies of Core.
 
 ---
 
@@ -440,42 +491,81 @@ Examples:
 
 ```text
 Vehicle
-??? ScriptableObjects
+|
++-- Configurations
 
 Audio
-??? ScriptableObjects
+|
++-- ScriptableObjects
 
 Input
-??? ScriptableObjects
+|
++-- ScriptableObjects
 ```
 
-Configuration assets belong in the Settings folder.
+Configuration assets should be stored in appropriate configuration or data directories.
 
-Example:
+Examples:
 
 ```text
-Settings
-??? DefaultVehicleConfig.asset
-??? DefaultSurfaceConfig.asset
-??? DefaultAudioConfig.asset
+Vehicle
+|
++-- Configurations
+    |
+    +-- VehicleConfig.asset
 ```
+
+Additional configuration assets may be introduced as their corresponding systems are implemented.
 
 ---
 
 # Unity Dependencies
 
-Mandatory packages:
+## Official Development Environment
 
-* Input System
-* Cinemachine
+**Unity 2022.3.62f3 LTS**
 
-The framework assumes both packages are installed.
+This is the official Unity Editor version used for current development and validation.
+
+## Minimum Supported Version Candidate
+
+**Unity 2021.3.45f2 LTS**
+
+Compatibility must be validated before official support is declared.
+
+## Future Compatibility
+
+**Unity 6 LTS**
+
+Compatibility has not yet been validated.
+
+## Mandatory Package
+
+- Unity Input System
+
+The framework uses Unity's Input System for input handling.
+
+## Optional Package
+
+- Cinemachine
+
+Cinemachine may be used for demonstration scenes or optional camera integration.
+
+The core vehicle controller must not depend on Cinemachine.
+
+## Render Pipeline
+
+The current development environment and demonstration assets use the Universal Render Pipeline (URP).
+
+URP is required to reproduce the current demonstration rendering setup as tested.
+
+Compatibility with other render pipelines has not yet been validated.
 
 ---
 
 # Assembly Definitions
 
-Each runtime module should have its own Assembly Definition.
+Each runtime module should have its own Assembly Definition when the architecture and dependency structure require it.
 
 Recommended assemblies:
 
@@ -491,13 +581,17 @@ TopDownVehicleController.Audio
 TopDownVehicleController.Editor
 ```
 
+Editor assemblies must remain separate from runtime assemblies.
+
+Assembly Definitions should reflect actual module dependencies and avoid circular references.
+
 ---
 
 # Namespace Convention
 
 Namespaces mirror the folder hierarchy.
 
-Example:
+Examples:
 
 ```csharp
 TopDownVehicleController.Core
@@ -513,26 +607,30 @@ TopDownVehicleController.Audio.Engine
 TopDownVehicleController.Input.Providers
 ```
 
+Namespace conventions must remain consistent throughout the framework.
+
 ---
 
 # Design Rules
 
-* One public class per file.
-* One responsibility per class.
-* One module per feature.
-* Keep systems independent.
-* Avoid duplicated code.
-* Avoid hidden dependencies.
-* Keep APIs small.
-* Prefer events over polling.
-* Prefer composition over inheritance.
-* Design for long-term scalability.
+- One public class per file.
+- One responsibility per class.
+- One module per feature.
+- Keep systems independent.
+- Avoid duplicated code.
+- Avoid hidden dependencies.
+- Keep APIs small.
+- Prefer events over unnecessary polling.
+- Prefer composition over inheritance.
+- Design for long-term scalability.
+- Preserve established gameplay behavior during architectural refactoring.
+- Validate changes before integration.
 
 ---
 
 # Future Expansion
 
-The architecture is prepared for additional modules without changing the existing structure.
+The architecture is designed to accommodate additional modules without requiring unnecessary changes to existing systems.
 
 Examples:
 
@@ -552,15 +650,19 @@ Networking
 
 Each new module should integrate through the existing architecture while preserving modularity and minimizing coupling.
 
+Future modules are architectural plans and are not part of the initial feature guarantee.
+
 ---
 
 # Final Principle
 
 The framework is built as a collection of independent systems coordinated by a lightweight controller.
 
-Every architectural decision should prioritize readability, maintainability, scalability and commercial-quality code suitable for long-term support and Unity Asset Store distribution.
+Every architectural decision should prioritize readability, maintainability, scalability, gameplay quality, and commercial-quality code suitable for long-term support and Unity Asset Store distribution.
+
+**Architecture serves creation. Creation serves fun.**
 
 -----------------------------------------------------
-Top-Down Vehicle Controller – Arcade System
-© 2026 Inverso Studio. All rights reserved.
+Top-Down Vehicle Controller â€“ Arcade System  
+Â© 2026 Inverso Studio. All rights reserved.
 -----------------------------------------------------

@@ -75,10 +75,15 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
         {
             vehicleMovement = GetComponent<VehicleMovement>();
 
+            // Ensure a valid default collision layer.
+            if (suspensionCollisionLayers.value == 0)
+            {
+                suspensionCollisionLayers = 1 << 0;
+            }
+
             frontFallCheckGrounded = CheckFrontFallGround();
             UpdateChassisCollider();
         }
-
         public void Update() { }
 
         public void FixedTick()
