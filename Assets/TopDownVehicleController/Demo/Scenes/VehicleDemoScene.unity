@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 330585545}
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
+  - component: {fileID: 330585550}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -208,13 +209,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.5498831, y: 0.00029372715, z: 0.000082925624, w: 0.8352416}
-  m_LocalPosition: {x: -1.437501, y: 38.50328, z: -7.830002}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 123.1, y: 27.3, z: 114}
+  m_LocalScale: {x: 0.5, y: 0.50000006, z: 0.50000006}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 375225887}
-  m_LocalEulerAnglesHint: {x: 66.718, y: 0.084, z: 0.067}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -259,6 +260,21 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &330585550
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa8ac0c4a7c2019498a11e9231417307, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cameraTransform: {fileID: 330585546}
+  targetProvider: {fileID: 375225878}
+  configuration: {fileID: 11400000, guid: 4b60e0fe0273da64da04f12c7da7b886, type: 2}
 --- !u!1 &375225877 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3266097455820242070, guid: ec5b68cb33ccf2e42920888e7f542c56, type: 3}
@@ -335,7 +351,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 80
   m_CollisionDetection: 0
 --- !u!114 &375225883
@@ -413,11 +429,6 @@ MonoBehaviour:
   chassisCollider: {fileID: 375225880}
   frontFallCheckPoint: {fileID: 6651269343203525984}
   frontFallCheckDistance: 1.2
---- !u!4 &375225887 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3239684452845422680, guid: ec5b68cb33ccf2e42920888e7f542c56, type: 3}
-  m_PrefabInstance: {fileID: 6651269343203525982}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &375225888
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -554,6 +565,18 @@ MonoBehaviour:
     audioClip: {fileID: 0}
     volume: 0
     pitch: 0
+--- !u!114 &375225891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 375225877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81d4b253e12328a469966c44fb417a92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1179,10 +1202,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 7656a96395a9e43429d037ad6179010f, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 3239684452845422680, guid: ec5b68cb33ccf2e42920888e7f542c56, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 330585546}
+    m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 3266097455820242070, guid: ec5b68cb33ccf2e42920888e7f542c56, type: 3}
       insertIndex: -1
@@ -1214,6 +1234,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3266097455820242070, guid: ec5b68cb33ccf2e42920888e7f542c56, type: 3}
       insertIndex: -1
       addedObject: {fileID: 375225890}
+    - targetCorrespondingSourceObject: {fileID: 3266097455820242070, guid: ec5b68cb33ccf2e42920888e7f542c56, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 375225891}
   m_SourcePrefab: {fileID: 100100000, guid: ec5b68cb33ccf2e42920888e7f542c56, type: 3}
 --- !u!4 &6651269343203525983 stripped
 Transform:
@@ -1233,5 +1256,6 @@ SceneRoots:
   - {fileID: 1817131708}
   - {fileID: 832575519}
   - {fileID: 410087041}
+  - {fileID: 330585546}
   - {fileID: 6651269343203525982}
   - {fileID: 1599786435}
