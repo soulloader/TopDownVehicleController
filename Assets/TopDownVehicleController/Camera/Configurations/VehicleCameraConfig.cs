@@ -20,5 +20,15 @@ namespace TopDownVehicleController.Camera.Configurations
         [Header("Dynamic Response")]
         [Min(0f)]
         public float speedInfluence = 0.5f;
+        [Header("Camera Dynamics")]
+
+        [Min(0f)]
+        public float maxSpeedZoomOut = 2f;
+
+        [Min(0.01f)]
+        public float dynamicsSmoothTime = 0.3f;
+
+        [Min(0.1f)]
+        public float speedForMaxZoomOut = 12f;
     }
 }

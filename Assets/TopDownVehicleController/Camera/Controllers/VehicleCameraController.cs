@@ -4,6 +4,7 @@ using TopDownVehicleController.Camera.Systems.Follow;
 using TopDownVehicleController.Camera.Interfaces;
 using TopDownVehicleController.Camera.Configurations;
 using TopDownVehicleController.Camera.Systems.LookAhead;
+using TopDownVehicleController.Camera.Systems.Dynamics;
 
 namespace TopDownVehicleController.Camera.Controllers
 {
@@ -19,6 +20,7 @@ namespace TopDownVehicleController.Camera.Controllers
         private CameraFollow cameraFollow;
         private Vector3 followVelocity;
         private CameraLookAhead cameraLookAhead;
+        private CameraDynamics cameraDynamics;
 
         private void Awake()
         {
@@ -49,6 +51,8 @@ namespace TopDownVehicleController.Camera.Controllers
             cameraFollow.Initialize(context);
             cameraLookAhead = new CameraLookAhead();
             cameraLookAhead.Initialize(context);
+            cameraDynamics = new CameraDynamics();
+            cameraDynamics.Initialize(context);
 
             CameraFrame initialFrame = new CameraFrame(
                 cameraTransform.position,
@@ -73,6 +77,7 @@ namespace TopDownVehicleController.Camera.Controllers
 
             cameraFollow.LateTick(ref frame);
             cameraLookAhead.LateTick(ref frame);
+            cameraDynamics.LateTick(ref frame);
 
             cameraTransform.position = Vector3.SmoothDamp(
                 cameraTransform.position,
