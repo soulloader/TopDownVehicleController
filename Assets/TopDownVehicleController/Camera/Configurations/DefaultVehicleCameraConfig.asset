@@ -16,3 +16,11 @@ MonoBehaviour:
   followSmoothTime: 0.2
   lookAheadDistance: 2
   speedInfluence: 0.5
+  maxSpeedZoomOut: 2
+  dynamicsSmoothTime: 0.3
+  speedForMaxZoomOut: 12
+  enableCameraRoll: 1
+  cameraRollMode: 1
+  maxRollAngle: 5
+  rollSmoothTime: 0.2
+  rollSensitivity: 0.15

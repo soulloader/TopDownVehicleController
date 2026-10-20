@@ -5,6 +5,7 @@ using TopDownVehicleController.Camera.Interfaces;
 using TopDownVehicleController.Camera.Configurations;
 using TopDownVehicleController.Camera.Systems.LookAhead;
 using TopDownVehicleController.Camera.Systems.Dynamics;
+using TopDownVehicleController.Camera.Systems.Roll;
 
 namespace TopDownVehicleController.Camera.Controllers
 {
@@ -21,6 +22,7 @@ namespace TopDownVehicleController.Camera.Controllers
         private Vector3 followVelocity;
         private CameraLookAhead cameraLookAhead;
         private CameraDynamics cameraDynamics;
+        private CameraRoll cameraRoll;
 
         private void Awake()
         {
@@ -53,6 +55,8 @@ namespace TopDownVehicleController.Camera.Controllers
             cameraLookAhead.Initialize(context);
             cameraDynamics = new CameraDynamics();
             cameraDynamics.Initialize(context);
+            cameraRoll = new CameraRoll();
+            cameraRoll.Initialize(context);
 
             CameraFrame initialFrame = new CameraFrame(
                 cameraTransform.position,
@@ -78,6 +82,7 @@ namespace TopDownVehicleController.Camera.Controllers
             cameraFollow.LateTick(ref frame);
             cameraLookAhead.LateTick(ref frame);
             cameraDynamics.LateTick(ref frame);
+            cameraRoll.LateTick(ref frame);
 
             cameraTransform.position = Vector3.SmoothDamp(
                 cameraTransform.position,
@@ -85,8 +90,18 @@ namespace TopDownVehicleController.Camera.Controllers
                 ref followVelocity,
                 configuration.followSmoothTime);
 
-            cameraTransform.rotation = Quaternion.LookRotation(
-                -configuration.followOffset.normalized, Vector3.up);
+            Quaternion baseRotation = Quaternion.LookRotation(
+                -configuration.followOffset.normalized,
+                Vector3.up
+                );
+
+            Quaternion rollRotation = Quaternion.Euler(
+                0f,
+                0f,
+                cameraRoll.CurrentRoll
+            );
+
+            cameraTransform.rotation = baseRotation * rollRotation;
         }
     }
 }
