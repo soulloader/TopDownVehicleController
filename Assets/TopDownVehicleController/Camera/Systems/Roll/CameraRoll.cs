@@ -39,6 +39,15 @@ namespace TopDownVehicleController.Camera.Systems.Roll
             if (context == null || context.Target == null)
                 return;
 
+            if (context.Target is UnityEngine.Object unityTarget &&
+                unityTarget == null)
+                return;
+
+            Transform targetTransform = context.Target.TargetTransform;
+
+            if (targetTransform == null)
+                return;
+
             var config = context.Configuration;
 
             if (!config.enableCameraRoll)
@@ -50,7 +59,7 @@ namespace TopDownVehicleController.Camera.Systems.Roll
                 return;
             }
 
-            Vector3 forward = context.Target.TargetTransform.forward;
+            Vector3 forward = targetTransform.forward;
             forward.y = 0f;
 
             if (forward.sqrMagnitude < 0.0001f)

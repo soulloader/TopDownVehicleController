@@ -16,6 +16,11 @@ namespace TopDownVehicleController.Camera.Systems.Dynamics
             currentZoomOut = 0f;
             zoomVelocity = 0f;
         }
+        public void Reset()
+        {
+            currentZoomOut = 0f;
+            zoomVelocity = 0f;
+        }
 
         public void LateTick(ref CameraFrame frame)
         {

@@ -18,6 +18,10 @@ namespace TopDownVehicleController.Camera.Systems.LookAhead
             if (context == null || context.Target == null)
                 return;
 
+            if (context.Target is UnityEngine.Object unityTarget &&
+                unityTarget == null)
+                return;
+
             Vector3 velocity = context.Target.Velocity;
 
             // Keep the look-ahead movement on the horizontal plane.
