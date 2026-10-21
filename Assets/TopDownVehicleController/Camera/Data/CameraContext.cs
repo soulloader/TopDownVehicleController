@@ -7,7 +7,7 @@ namespace TopDownVehicleController.Camera.Data
     public sealed class CameraContext
     {
         public Transform CameraTransform { get; }
-        public ICameraTarget Target { get; }
+        public ICameraTarget Target { get; private set; }
         public VehicleCameraConfig Configuration { get; }
 
         public CameraContext(
@@ -18,6 +18,11 @@ namespace TopDownVehicleController.Camera.Data
             CameraTransform = cameraTransform;
             Target = target;
             Configuration = configuration;
+        }
+
+        public void SetTarget(ICameraTarget newTarget)
+        {
+            Target = newTarget;
         }
     }
 }

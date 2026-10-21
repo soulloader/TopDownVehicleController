@@ -26,6 +26,13 @@ namespace TopDownVehicleController.Camera.Systems.Roll
             rollVelocity = 0f;
             initialized = false;
         }
+        public void Reset()
+        {
+            currentRoll = 0f;
+            rollVelocity = 0f;
+            initialized = false;
+            strategy = null;
+        }
 
         public void LateTick(ref CameraFrame frame)
         {
