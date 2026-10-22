@@ -84,6 +84,7 @@ The framework is organized into the following principal directories:
 TopDownVehicleController
 |
 +-- Audio
++-- Camera
 +-- Core
 +-- Data
 +-- Demo
@@ -125,6 +126,32 @@ It must never reference:
 - Editor
 
 Every other module may reference Core.
+
+---
+
+## Camera
+
+Responsible for modular camera behavior and target tracking.
+
+Responsibilities:
+
+- Camera system coordination
+- Smooth target following
+- Velocity-based look-ahead
+- Dynamic zoom based on target speed
+- Configurable camera roll
+- Runtime camera target switching
+- Camera configuration and data management
+
+The Camera module communicates with targets through ICameraTarget.
+
+Camera systems implement ICameraSystem and operate on a shared CameraFrame.
+
+VehicleCameraController coordinates camera systems without implementing their individual behaviors.
+
+The Camera module must not depend directly on VehicleController, VehicleMovement, or vehicle-specific gameplay implementations.
+
+Camera functionality must remain independent of Cinemachine.
 
 ---
 
@@ -247,6 +274,56 @@ Every framework module may depend on Core.
 Core depends on no higher-level framework module.
 
 ---
+# Camera Architecture
+
+```text
+Camera
+|
++-- Configurations
+|   +-- VehicleCameraConfig
+|
++-- Controllers
+|   +-- VehicleCameraController
+|
++-- Data
+|   +-- CameraContext
+|   +-- CameraFrame
+|
++-- Interfaces
+|   +-- ICameraSystem
+|   +-- ICameraTarget
+|
++-- Systems
+|   +-- Dynamics
+|   |   +-- CameraDynamics
+|   |
+|   +-- Follow
+|   |   +-- CameraFollow
+|   |
+|   +-- LookAhead
+|   |   +-- CameraLookAhead
+|   |
+|   +-- Roll
+|       +-- CameraRoll
+|       +-- ICameraRollStrategy
+|       +-- MotionRollStrategy
+|       +-- SteeringRollStrategy
+|
++-- Targets
+    +-- RigidbodyCameraTarget
+```
+
+The Camera module consists of independent systems coordinated by VehicleCameraController.
+
+CameraContext provides shared references and configuration.
+
+CameraFrame carries the calculated camera position and look-at position between systems.
+
+ICameraTarget abstracts target position, orientation, and velocity.
+
+Camera systems must remain independent of vehicle-specific movement implementations.
+
+Camera target switching is coordinated by VehicleCameraController through CameraContext.
 
 # Vehicle Architecture
 
@@ -380,6 +457,8 @@ Vehicle ------> Core
    |
    +----------> Audio abstractions
 
+Camera -------> Core (when shared abstractions are needed)
+
 Input --------> Core
 
 Audio --------> Core
@@ -451,6 +530,8 @@ Implementation begins only after these questions are answered.
 
 ```text
 Vehicle -> Core
+
+Camera -> Core
 
 Input -> Core
 
@@ -635,7 +716,6 @@ The architecture is designed to accommodate additional modules without requiring
 Examples:
 
 ```text
-Camera
 
 Weapons
 
