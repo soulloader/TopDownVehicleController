@@ -626,13 +626,16 @@ Compatibility has not yet been validated.
 
 The framework uses Unity's Input System for input handling.
 
+
 ## Optional Package
 
-- Cinemachine
+No additional camera package is required.
 
-Cinemachine may be used for demonstration scenes or optional camera integration.
+The framework provides its own modular camera system.
 
-The core vehicle controller must not depend on Cinemachine.
+The Camera module operates independently of Cinemachine.
+
+Third-party camera integrations may be implemented externally without modifying the core framework.
 
 ## Render Pipeline
 

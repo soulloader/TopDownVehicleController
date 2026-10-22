@@ -1,5 +1,7 @@
-﻿=====================================================
+=====================================================
+
                  Inverso Studio
+
 =====================================================
 
 Top-Down Vehicle Controller – Arcade System
@@ -30,407 +32,406 @@ C#
 
 # Top-Down Vehicle Controller – Arcade System
 
+**Inverso Studio**
+**Author:** Edison Oliveira
+**Version:** 0.1.0 (development)
+**Language:** C#
+**Architecture:** Modular Framework
+
 > **Architecture serves creation. Creation serves fun.**
 
-A modular framework for creating arcade-style top-down vehicle games in Unity.
+A modular framework for building arcade-style top-down vehicle games in Unity.
 
 ---
 
-## Author
+## Overview
 
-**Edison Oliveira**  
-**Inverso Studio**
+Top-Down Vehicle Controller – Arcade System is designed around independent systems with clear responsibilities. Rather than placing gameplay logic inside one large controller, the framework separates movement, suspension, detection, audio, effects, and camera behavior into focused modules.
+
+The project prioritizes readability, maintainability, extensibility, and enjoyable arcade gameplay. It is under active development toward a commercial Unity Asset Store release.
+
+**This is a development version, not a finished commercial package.** Features and compatibility claims are subject to further testing.
+
+## Vision
+
+Build a production-ready, reusable vehicle framework that is straightforward to configure and extend across projects of different sizes.
+
+## Core Principles
+
+- Modular architecture and single responsibility
+- Composition over inheritance
+- Low coupling and high cohesion
+- Reusable components and clear interfaces
+- Readable, maintainable C# code
+- Performance-conscious implementation
+- Scalable systems and long-term support
+- Gameplay quality as the primary goal
+
+> **We design before we implement.**
+> **Code is a tool. Gameplay is the goal.**
 
 ---
 
-## Engine
+## Development Status
 
-**Official Development Version:** Unity 2022.3.62f3 LTS
+### Vehicle Foundation — Pack 1
 
-**Minimum Supported Version Candidate:** Unity 2021.3.45f2 LTS
+The initial pack focuses on the following areas:
 
-### Compatibility Status
+- Core architecture and vehicle coordination
+- Vehicle movement and steering
+- Suspension
+- Ground, surface, and obstacle detection
+- Engine and surface audio
+- Basic visual effects
 
-| Unity Version | Status |
+These areas form the Pack 1 development scope. Their inclusion in this list does not imply that every system is feature-complete or commercially validated.
+
+### Modular Camera — Implemented and Tested in the Demo
+
+The current camera module includes:
+
+- Smooth target following
+- Velocity-based look-ahead
+- Dynamic zoom based on vehicle speed
+- Optional camera roll
+- Two roll strategies: **Steering** and **Motion**
+- Runtime switching between camera targets
+- ScriptableObject-based camera configuration
+- A Rigidbody-backed implementation of `ICameraTarget`
+
+The camera has been tested in the development demo, including target switching between two vehicles and smooth zoom transitions. Additional integration and release testing remain necessary.
+
+---
+
+## Unity Compatibility
+
+| Unity version | Status |
 |---|---|
-| Unity 2022.3.62f3 LTS | Validated |
-| Unity 2021.3.45f2 LTS | Pending validation |
-| Unity 6 LTS | Not yet validated |
+| **2022.3.62f3 LTS** | Official development baseline; validated in current project tests |
+| **2021.3.45f2 LTS** | Minimum support candidate; pending validation |
+| **Unity 6 LTS** | Not yet validated |
 
-The framework is currently developed and tested using Unity 2022.3.62f3 LTS.
+The current development environment uses **Unity 2022.3.62f3 LTS**.
 
-Compatibility with Unity 2021 remains a development goal and must be validated before being included in the official support policy.
+The commercial support matrix will be finalized after compatibility testing. An unvalidated Unity version is not an officially supported version.
 
-Compatibility with Unity 6 is planned for future evaluation.
+## Dependencies and Rendering
 
----
+### Required Package
 
-## Language
+- **Unity Input System** — used for player input handling.
 
-C#
+The package must be installed and configured in the target Unity project for the framework's input integration.
 
----
+### Camera
 
-## Architecture
+The framework includes its **own modular camera system**. **Cinemachine is not required** for the camera module or the core vehicle controller.
 
-Modular Framework
+Third-party camera integrations may be developed separately without introducing them as core dependencies.
 
----
+### Render Pipeline
 
-## Current Version
+The development environment and current demo use the **Universal Render Pipeline (URP)**.
 
-**0.1.0**
-
-Development version. Not yet a final commercial release.
+URP is required to reproduce the demo's currently tested materials and rendering setup. Compatibility with other render pipelines has not yet been validated.
 
 ---
 
-# Overview
-
-Top-Down Vehicle Controller – Arcade System is a modular framework designed for developing arcade-style top-down vehicle games in Unity.
-
-The framework emphasizes clean architecture, modular design, maintainability, and scalability, allowing developers to build projects using independent systems that are easy to understand, extend, and maintain.
-
-Instead of concentrating all gameplay logic inside a single controller, each feature is implemented as an independent system with a well-defined responsibility.
-
-The framework is intended for both commercial and independent game development and is being developed toward professional quality standards suitable for Unity Asset Store distribution.
-
----
-
-# Vision
-
-Build a production-ready vehicle framework that is clean, modular, scalable, and easy to integrate into projects of different sizes.
-
----
-
-# Core Principles
-
-- Modular Architecture
-- Single Responsibility Principle
-- Composition over Inheritance
-- Clean Code
-- Reusable Components
-- Scalable Systems
-- High Readability
-- Performance-Oriented Design
-- Commercial Asset Quality
-- Long-Term Maintainability
-
----
-
-# Key Features
-
-The framework is designed around the following features and architectural goals:
-
-- Modular vehicle architecture
-- Independent gameplay systems
-- Clean separation of responsibilities
-- Organized project structure
-- Integration into existing Unity projects
-- Extensible architecture
-- Technical documentation
-- Maintainable codebase
-- Modular expansion through future development packs
-
-Feature availability depends on the current development stage.
-
----
-
-# Supported Unity Versions
-
-## Official Development Version
-
-**Unity 2022.3.62f3 LTS**
-
-This is the primary Unity Editor version used for development, integration, and testing.
-
-## Minimum Supported Version Candidate
-
-**Unity 2021.3.45f2 LTS**
-
-Support for Unity 2021 remains a project objective.
-
-The updated framework must pass compatibility testing before this version can be declared officially supported.
-
-## Future Compatibility
-
-**Unity 6 LTS**
-
-Compatibility testing is planned but has not yet been completed.
-
-## Compatibility Policy
-
-Only Unity versions that have passed the required validation process will be listed as officially supported.
-
-Using an unvalidated Unity version may require additional configuration or compatibility adjustments.
-
----
-
-# Required Packages
-
-## Mandatory Dependency
-
-- **Unity Input System**
-
-The framework uses Unity's Input System for input handling.
-
-The Input System package must be installed and configured in the target Unity project.
-
-## Optional Integration
-
-- **Cinemachine**
-
-Cinemachine may be used for camera functionality in demonstration scenes or project-specific integrations.
-
-It is not intended to be a mandatory dependency of the core vehicle controller.
-
-## Render Pipeline
-
-The current development environment and demonstration assets use the **Universal Render Pipeline (URP)**.
-
-URP is required to reproduce the current demonstration's rendering configuration and materials as tested.
-
-Compatibility with other render pipelines has not yet been validated.
-
----
-
-# Folder Structure
-
-The framework is organized into modular directories.
+## Folder Structure
 
 ```text
 TopDownVehicleController
-│
-├── Audio
-├── Core
-├── Data
-├── Demo
-├── Documentation
-├── Input
-├── Models
-└── Vehicle
+|
++-- Audio
++-- Camera
++-- Core
++-- Data
++-- Demo
++-- Documentation
++-- Input
++-- Models
++-- Vehicle
 ```
 
-The Vehicle module is organized around independent systems.
+### Vehicle Module
 
 ```text
 Vehicle
-│
-├── Configurations
-├── Controllers
-├── Data
-├── Interfaces
-├── Prefabs
-└── Systems
-    │
-    ├── Audio
-    ├── Detection
-    ├── Effects
-    ├── Movement
-    └── Suspension
+|
++-- Configurations
++-- Controllers
++-- Data
++-- Interfaces
++-- Prefabs
++-- Systems
+    |
+    +-- Audio
+    +-- Detection
+    +-- Effects
+    +-- Movement
+    +-- Suspension
 ```
 
-The exact directory structure may evolve as the framework develops.
+### Camera Module
+
+```text
+Camera
+|
++-- Configurations
+|   +-- VehicleCameraConfig
+|
++-- Controllers
+|   +-- VehicleCameraController
+|
++-- Data
+|   +-- CameraContext
+|   +-- CameraFrame
+|
++-- Interfaces
+|   +-- ICameraSystem
+|   +-- ICameraTarget
+|
++-- Systems
+|   +-- Dynamics
+|   |   +-- CameraDynamics
+|   +-- Follow
+|   |   +-- CameraFollow
+|   +-- LookAhead
+|   |   +-- CameraLookAhead
+|   +-- Roll
+|       +-- CameraRoll
+|       +-- ICameraRollStrategy
+|       +-- MotionRollStrategy
+|       +-- SteeringRollStrategy
+|
++-- Targets
+    +-- RigidbodyCameraTarget
+```
+
+The folder structure may evolve as development continues.
 
 ---
 
-# Module Overview
+## Module Overview
 
-## Core
+### Core
 
-Shared utilities, interfaces, events, extensions, and common architectural components.
+Shared utilities, interfaces, events, extensions, and common architectural components. Core must remain independent of higher-level framework modules.
 
-## Vehicle
+### Vehicle
 
-Vehicle gameplay systems and controller orchestration.
+Vehicle gameplay systems and coordination through `VehicleController`. Movement, suspension, detection, audio, and effects remain the responsibilities of their respective systems.
 
-## Input
+### Camera
+
+Independent camera behavior coordinated by `VehicleCameraController`. The module communicates with tracked objects through `ICameraTarget`, rather than depending directly on vehicle-specific movement implementations.
+
+### Input
 
 Input abstraction using the Unity Input System.
 
-## Audio
+### Audio
 
-Vehicle audio systems and related resources.
+Shared audio resources and related functionality. Vehicle-specific audio behavior may live inside the Vehicle module.
 
-## Data
+### Data
 
 Shared data and configuration resources.
 
-## Models
+### Models
 
-Vehicle models, meshes, materials, and related visual resources.
+Vehicle meshes, materials, and related visual resources.
 
-## Demo
+### Demo
 
-Example scenes, prefabs, terrain resources, and sample configurations.
+Example scenes, prefabs, scripts, and sample configurations. Demo content must not be a required runtime dependency.
 
-## Documentation
+### Documentation
 
-Architecture decisions, coding standards, development records, and project documentation.
+Architecture decisions, coding standards, development records, roadmap, and other project documents.
 
 ---
 
-# Architecture Overview
+## Architecture Overview
 
-The framework follows a modular architecture.
-
-The `VehicleController` acts as a coordinator.
-
-Each gameplay feature is implemented as an independent system with a clearly defined responsibility.
+The framework separates coordination from implementation.
 
 ```text
 VehicleController
-        │
-        ├── Movement
-        ├── Suspension
-        ├── Detection
-        ├── Audio
-        └── Effects
+    |
+    +-- Movement
+    +-- Suspension
+    +-- Detection
+    +-- Audio
+    +-- Effects
+
+VehicleCameraController
+    |
+    +-- CameraFollow
+    +-- CameraLookAhead
+    +-- CameraDynamics
+    +-- CameraRoll
 ```
 
-Gameplay logic should remain within its responsible system rather than accumulate inside the `VehicleController`.
+The camera controller and vehicle controller are independent. The camera follows an `ICameraTarget`, not a specific vehicle controller.
 
-The architecture is designed to support independent development, testing, maintenance, and future expansion.
+### Camera Data Flow
+
+1. `RigidbodyCameraTarget` implements `ICameraTarget`, exposing the target transform and velocity.
+2. `VehicleCameraController` creates and shares a `CameraContext`.
+3. Each camera system updates a shared `CameraFrame` during `LateTick`.
+4. The controller applies the calculated camera position and roll.
+5. `SetTarget(ICameraTarget)` changes the tracked object at runtime.
+
+`CameraRoll` resets its internal state when the target changes. `CameraDynamics` retains its current zoom state so the transition toward the new target's speed remains smooth.
+
+`CameraFrame.LookAtPosition` is currently calculated as shared frame data; the controller uses the configured follow offset to establish its fixed top-down camera orientation.
+
+### Dependency Boundaries
+
+- Camera systems depend on the `ICameraTarget` contract, not `VehicleController` or `VehicleMovement`.
+- `CameraContext` holds shared references and configuration.
+- `CameraFrame` carries intermediate camera calculations.
+- `ICameraSystem` defines `Initialize(CameraContext)` and `LateTick(ref CameraFrame)`.
+- Cinemachine is not a dependency of the camera module.
+- Demo content must not be required by runtime modules.
+
+See `Architecture.md` for the complete architectural rules.
 
 ---
 
-# Development Workflow
+## Camera Configuration
 
-Each new system follows a structured development process:
+Camera settings are stored in a `VehicleCameraConfig` ScriptableObject.
 
-1. Define responsibility.
-2. Define module.
+| Group | Parameters |
+|---|---|
+| Follow | `followOffset`, `followSmoothTime` |
+| Look Ahead | `lookAheadDistance`, `speedInfluence` |
+| Camera Dynamics | `maxSpeedZoomOut`, `dynamicsSmoothTime`, `speedForMaxZoomOut` |
+| Camera Roll | `enableCameraRoll`, `cameraRollMode`, `maxRollAngle`, `rollSmoothTime`, `rollSensitivity` |
+
+Camera roll is **disabled by default in the configuration class**. It can be enabled and adjusted per configuration asset.
+
+The current demo includes a camera target-switching test: pressing **T** switches between the two configured targets. This test script belongs to the Demo module and is not required for production integration.
+
+### Integrating a Camera Target
+
+A tracked object must provide an implementation of `ICameraTarget`:
+
+```csharp
+public interface ICameraTarget
+{
+    Transform TargetTransform { get; }
+    Vector3 Velocity { get; }
+}
+```
+
+For Rigidbody-based vehicles, `RigidbodyCameraTarget` supplies this implementation. Other target adapters can implement the same interface without changing the camera systems.
+
+The `VehicleCameraController` needs a camera transform, a target provider, and a `VehicleCameraConfig` asset. Runtime target changes can be requested through `SetTarget(ICameraTarget)`.
+
+This section describes the existing API; a complete release-ready setup guide will be prepared and validated before distribution.
+
+---
+
+## Development Workflow
+
+Each new system follows a structured process:
+
+1. Define its responsibility.
+2. Identify its module.
 3. Define dependencies.
 4. Design communication.
-5. Document architecture.
+5. Document the architecture.
 6. Implement.
 7. Test.
 8. Integrate.
 9. Document changes.
 
-The framework follows the principle:
-
-> **We design before we implement.**
-
-Technical architecture should support gameplay quality rather than become an obstacle to development.
-
-> **Code is a tool. Gameplay is the goal.**
+Architectural changes should preserve validated gameplay behavior.
 
 ---
 
-# Project Documentation
+## Project Documentation
 
-Project documentation is organized in the `Documentation` directory.
+Documentation is maintained in the `Documentation` directory. Principal documents include:
 
-Principal documents include:
+- `README.md`
+- `CHANGELOG.md`
+- `CodingStandards.md`
+- `Architecture.md`
+- `ADR.md`
+- `DevelopmentJournal.md`
+- `ROADMAP.md`
+- `LICENSE.md`
 
-- README.md
-- CHANGELOG.md
-- CodingStandards.md
-- Architecture.md
-- ADR.md
-- DevelopmentJournal.md
-- ROADMAP.md
-- LICENSE.md
-
-Additional documentation may be introduced as the project evolves.
+Additional documents may be introduced as the project evolves.
 
 ---
 
-# Roadmap
+## Roadmap
 
-## Pack 1 – Base Vehicle Controller
+### Pack 1 — Base Vehicle Controller
 
-The initial development pack focuses on the foundational vehicle systems:
+The initial pack targets:
 
-- Core Architecture
-- Vehicle Controller
-- Movement
+- Core architecture
+- Vehicle controller
+- Movement and steering
 - Suspension
-- Ground Detection
-- Obstacle Detection
-- Engine and Surface Audio
-- Basic Visual Effects
+- Ground and obstacle detection
+- Engine and surface audio
+- Basic visual effects
 
-## Future Packs and Modules
+### Camera Module
 
-Planned areas of expansion include:
+The initial modular camera implementation is already present and tested in the demo. Future work includes further integration testing, documentation, packaging, and commercial release validation.
 
-- Camera System
-- Weapon System
-- AI System
-- Multiplayer Support
-- Mobile Support
-- Additional Vehicle Types
-- Specialized Vehicle Modules
+### Future Packs and Modules
 
-Future features are development goals and are not guaranteed to be included in the initial release.
+Planned expansion areas include:
 
----
+- Weapon systems
+- AI systems
+- Multiplayer support
+- Mobile support
+- Additional vehicle types
+- Specialized vehicle modules
 
-# Official Support Policy
-
-## Current Development Baseline
-
-**Unity 2022.3.62f3 LTS**
-
-This version is the official development baseline and has been validated through current controller testing and clean-project package import.
-
-## Unity 2021 Compatibility
-
-**Unity 2021.3.45f2 LTS – Pending Validation**
-
-The project aims to preserve compatibility with Unity 2021.
-
-However, the updated package must be tested before official commercial support can be declared.
-
-## Unity 6 Compatibility
-
-**Not Yet Validated**
-
-Unity 6 compatibility remains a future validation objective.
-
-## Commercial Support
-
-The official support matrix will be finalized before commercial release.
-
-Compatibility guarantees will apply only to versions explicitly identified as supported in the release documentation.
+Future features are development goals, not guarantees for the initial release.
 
 ---
 
-# Versioning
+## Official Support Policy
 
-This project follows Semantic Versioning (SemVer).
+The current baseline is **Unity 2022.3.62f3 LTS**. The updated framework has been tested in the development project, including controller testing and clean-project package import.
 
-Examples:
+**Unity 2021.3.45f2 LTS** remains a support candidate pending compatibility validation.
 
-- 0.1.0
-- 0.2.0
-- 1.0.0
+**Unity 6 LTS** has not yet been validated.
 
-The current version is **0.1.0**.
+Commercial compatibility guarantees will apply only to versions explicitly listed in release documentation after testing.
 
-Version numbers and compatibility declarations will be updated as development progresses.
+## Versioning
 
----
+The project follows Semantic Versioning (SemVer).
 
-# License
+Current development version: **0.1.0**.
 
-See the `LICENSE.md` file for licensing information.
+Future version numbers will reflect development and release milestones.
 
----
+## License
 
-# Author
+See `LICENSE.md` for licensing information.
+
+## Author
 
 **Edison Oliveira**
-
 Independent Game Developer
-
 **Inverso Studio**
 
 ---
 
------------------------------------------------------
-Top-Down Vehicle Controller – Arcade System  
 © 2026 Inverso Studio. All rights reserved.
------------------------------------------------------
