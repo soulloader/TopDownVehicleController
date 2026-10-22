@@ -23,7 +23,6 @@ namespace TopDownVehicleController.Camera.Configurations
         [Min(0f)]
         public float lookAheadDistance = 2f;
 
-        [Header("Dynamic Response")]
         [Min(0f)]
         public float speedInfluence = 0.5f;
 
