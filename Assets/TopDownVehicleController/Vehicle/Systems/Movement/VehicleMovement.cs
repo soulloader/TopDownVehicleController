@@ -22,8 +22,6 @@ namespace TopDownVehicleController.Vehicle.Systems.Movement
         private Transform movementReference;
         private VehicleMovementState movementState = VehicleMovementState.Idle;
 
-        private VehicleMovement vehicleMovement;
-
         public event Action<VehicleMovementState> OnMovementStateChanged;
         public VehicleMovementState CurrentMovementState => movementState;
 

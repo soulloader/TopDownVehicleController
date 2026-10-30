@@ -10,6 +10,7 @@ namespace TopDownVehicleController.Vehicle.Data
         Metal,
         Sand,
         Mud,
-        Ice
+        Ice,
+        Wood
     }
 }

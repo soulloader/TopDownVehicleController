@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 using TopDownVehicleController.Vehicle.Data;
@@ -18,6 +19,13 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
 
         [Header("Suspension Points")]
         [SerializeField] private Transform[] suspensionPoints;
+
+        // NEW: Stores the latest ground contact for each suspension point.
+        private SuspensionContactData[] suspensionContacts;
+
+        // NEW: Read-only access for other vehicle systems.
+        public IReadOnlyList<SuspensionContactData> SuspensionContacts
+            => suspensionContacts;
 
         [Header("Suspension Settings")]
         [SerializeField, Min(0.01f)] private float rayLength = 1.2f;
@@ -53,10 +61,10 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
         [Header("Front Collision Assist")]
         [SerializeField] private Collider chassisCollider;
         private bool isFalling;
-        private bool landingDetected;
 
         [SerializeField] private Transform frontFallCheckPoint;
         [SerializeField, Min(0.01f)] private float frontFallCheckDistance = 1.2f;
+        [SerializeField, Min(0.01f)] private float frontFallCheckRadius = 0.15f;
 
         private Vector3 suspensionGroundNormal;
         private Vector3 frontFallGroundPoint;
@@ -64,7 +72,6 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
         private bool frontFallCheckGrounded;
         private float initialGroundDistance;
         private bool visualHeightCalibrated;
-        private int groundedFrames;
 
         public void SetContext(VehicleContext context)
         {
@@ -73,6 +80,10 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
 
         public void Initialize()
         {
+            // NEW: Allocate contact storage once during initialization.
+            suspensionContacts = new SuspensionContactData[
+                suspensionPoints != null ? suspensionPoints.Length : 0];
+
             vehicleMovement = GetComponent<VehicleMovement>();
 
             // Ensure a valid default collision layer.
@@ -84,6 +95,7 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
             frontFallCheckGrounded = CheckFrontFallGround();
             UpdateChassisCollider();
         }
+
         public void Update() { }
 
         public void FixedTick()
@@ -93,10 +105,17 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
 
             suspensionGroundNormal = Vector3.zero;
 
-            foreach (Transform point in suspensionPoints)
+            // UPDATED: Indexed loop to associate each contact
+            // with its corresponding suspension point.
+            for (int i = 0; i < suspensionPoints.Length; i++)
             {
+                Transform point = suspensionPoints[i];
+
                 if (point == null)
+                {
+                    suspensionContacts[i] = default;
                     continue;
+                }
 
                 bool grounded = Physics.Raycast(
                     point.position,
@@ -104,6 +123,11 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
                     out RaycastHit hit,
                     rayLength,
                     suspensionCollisionLayers);
+
+                // NEW: Save ground contact without additional raycasts.
+                suspensionContacts[i] = grounded
+                    ? new SuspensionContactData(true, hit.point, hit.normal)
+                    : default;
 
                 if (grounded)
                 {
@@ -146,66 +170,30 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
             if (chassisCollider == null)
                 return;
 
-            // Normal grounded state. Losing the FrontFallCheck starts a fall.
-            if (!isFalling && !landingDetected)
-            {
-                if (!frontFallCheckGrounded)
-                {
-                    isFalling = true;
-                    chassisCollider.enabled = false;
-
-                    // Capture movement state at the beginning of the fall.
-                    bool isSprinting =
-                        vehicleMovement != null &&
-                        vehicleMovement.CurrentMovementState ==
-                        VehicleMovementState.Sprint;
-
-                    // Negative X raises the nose; positive X lowers it.
-                    currentNoseAngle = isSprinting
-                        ? -sprintNoseUpAngle
-                        : normalNoseDownAngle;
-                }
-
-                return;
-            }
-
-            // Falling state. Restore the collider when terrain is detected.
-            if (isFalling)
-            {
-                if (frontFallCheckGrounded)
-                {
-                    chassisCollider.enabled = true;
-                    isFalling = false;
-                    landingDetected = true;
-
-                    // Return to normal terrain alignment.
-                    currentNoseAngle = 0f;
-                }
-
-                return;
-            }
-
-            // Landing state. Ignore temporary loss of contact after impact.
-            if (landingDetected)
+            // FrontFallCheck exclusively controls chassis collision.
+            if (frontFallCheckGrounded)
             {
                 chassisCollider.enabled = true;
-
-                if (frontFallCheckGrounded)
-                {
-                    groundedFrames++;
-
-                    if (groundedFrames >= 5)
-                    {
-                        landingDetected = false;
-                        groundedFrames = 0;
-                    }
-                }
-                else
-                {
-                    groundedFrames = 0;
-                }
-
+                isFalling = false;
+                currentNoseAngle = 0f;
                 return;
+            }
+
+            // The front sensor has lost the terrain.
+            chassisCollider.enabled = false;
+
+            if (!isFalling)
+            {
+                isFalling = true;
+
+                bool isSprinting =
+                    vehicleMovement != null &&
+                    vehicleMovement.CurrentMovementState ==
+                    VehicleMovementState.Sprint;
+
+                currentNoseAngle = isSprinting
+                    ? -sprintNoseUpAngle
+                    : normalNoseDownAngle;
             }
         }
 
@@ -218,7 +206,7 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
             Vector3 targetPosition = vehicleVisual.position;
             float adjustedVisualHeightOffset = visualHeightOffset;
 
-            if (frontFallCheckGrounded && visualHeightCalibrated)
+            if (frontFallCheckGrounded && frontFallGroundPointValid && visualHeightCalibrated)
             {
                 float distanceDifference =
                     Vector3.Distance(
@@ -260,6 +248,17 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
                 Time.fixedDeltaTime * visualLerpSpeed);
         }
 
+        private int GetFrontFallDetectionMask()
+        {
+            int detectionMask = suspensionCollisionLayers.value;
+            int playerLayer = LayerMask.NameToLayer("Player");
+
+            if (playerLayer >= 0)
+                detectionMask &= ~(1 << playerLayer);
+
+            return detectionMask;
+        }
+
         private bool CheckFrontFallGround()
         {
             frontFallGroundPointValid = false;
@@ -267,27 +266,56 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
             if (frontFallCheckPoint == null)
                 return true;
 
-            bool grounded = Physics.Raycast(
-                frontFallCheckPoint.position,
-                -frontFallCheckPoint.up,
-                out RaycastHit hit,
-                frontFallCheckDistance,
-                suspensionCollisionLayers);
+            // Ground overlap test: the sphere is positioned below the sensor.
+            // This overlap alone controls the chassis collider.
+            Vector3 checkCenter = frontFallCheckPoint.position +
+                                  Vector3.down * frontFallCheckDistance;
+
+            int detectionMask = GetFrontFallDetectionMask();
+
+            bool grounded = Physics.CheckSphere(
+                checkCenter,
+                frontFallCheckRadius,
+                detectionMask,
+                QueryTriggerInteraction.Ignore);
 
             if (grounded)
             {
-                frontFallGroundPoint = hit.point;
-                frontFallGroundPointValid = true;
-
-                // Capture the initial ground distance for visual calibration.
-                if (!visualHeightCalibrated)
+                // Optional contact point for the existing visual height calibration.
+                // This raycast does not control chassis collision.
+                if (Physics.Raycast(
+                    frontFallCheckPoint.position,
+                    Vector3.down,
+                    out RaycastHit hit,
+                    frontFallCheckDistance + frontFallCheckRadius,
+                    detectionMask,
+                    QueryTriggerInteraction.Ignore))
                 {
-                    initialGroundDistance = hit.distance;
-                    visualHeightCalibrated = true;
+                    frontFallGroundPoint = hit.point;
+                    frontFallGroundPointValid = true;
+
+                    if (!visualHeightCalibrated)
+                    {
+                        initialGroundDistance = hit.distance;
+                        visualHeightCalibrated = true;
+                    }
                 }
             }
 
             return grounded;
+        }
+
+        private void OnDisable()
+        {
+            // Restore chassis collision when the suspension is disabled.
+            if (chassisCollider != null)
+            {
+                chassisCollider.enabled = true;
+            }
+
+            // Reset the front fall assist state.
+            isFalling = false;
+            currentNoseAngle = 0f;
         }
 
         private void OnDrawGizmosSelected()
@@ -308,17 +336,31 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
 
             if (frontFallCheckPoint != null)
             {
+                Vector3 sphereCenter =
+                    frontFallCheckPoint.position +
+                    Vector3.down * frontFallCheckDistance;
+
+                int detectionMask = GetFrontFallDetectionMask();
+
+                bool groundDetected = Physics.CheckSphere(
+                    sphereCenter,
+                    frontFallCheckRadius,
+                    detectionMask,
+                    QueryTriggerInteraction.Ignore);
+
+                // Green = Ground detected.
+                // Red = No ground detected.
+                Gizmos.color = groundDetected
+                    ? Color.green
+                    : Color.red;
+
+                Gizmos.DrawWireSphere(
+                    sphereCenter,
+                    frontFallCheckRadius);
+
                 Gizmos.DrawLine(
                     frontFallCheckPoint.position,
-                    frontFallCheckPoint.position -
-                    frontFallCheckPoint.up * frontFallCheckDistance);
-            }
-
-            // Visualize only the FrontFallCheck terrain contact.
-            if (frontFallGroundPointValid)
-            {
-                Gizmos.color = Color.green;
-                Gizmos.DrawSphere(frontFallGroundPoint, 0.12f);
+                    sphereCenter);
             }
         }
     }

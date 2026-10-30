@@ -41,14 +41,35 @@ namespace TopDownVehicleController.Vehicle
 
         private void Awake()
         {
-            CreateContext();
+            if (vehicleConfig == null)
+            {
+                Debug.LogError(
+                    "[TopDownVehicleController] VehicleConfig is not assigned.",
+                    this);
+
+                enabled = false;
+                return;
+            }
+
+            if (!CreateContext())
+            {
+                enabled = false;
+                return;
+            }
+
             DiscoverSystems();
             InjectContext();
             InjectInputProvider();
             InjectMovementReference();
-            InitializeSystems();
+
+            if (!InitializeSystems())
+            {
+                enabled = false;
+                return;
+            }
 
             initialized = true;
+
         }
 
         private void Update()
@@ -58,6 +79,9 @@ namespace TopDownVehicleController.Vehicle
 
             foreach (IVehicleSystem system in systems)
             {
+                if (system is Behaviour behaviour && !behaviour.isActiveAndEnabled)
+                    continue;
+
                 system.Update();
             }
         }
@@ -69,6 +93,9 @@ namespace TopDownVehicleController.Vehicle
 
             foreach (IVehicleSystem system in systems)
             {
+                if (system is Behaviour behaviour && !behaviour.isActiveAndEnabled)
+                    continue;
+
                 system.FixedTick();
             }
         }
@@ -80,6 +107,9 @@ namespace TopDownVehicleController.Vehicle
 
             foreach (IVehicleSystem system in systems)
             {
+                if (system is Behaviour behaviour && !behaviour.isActiveAndEnabled)
+                    continue;
+
                 system.LateTick();
             }
         }
@@ -88,21 +118,41 @@ namespace TopDownVehicleController.Vehicle
 
         #region Initialization
 
-        private void CreateContext()
+        private bool CreateContext()
         {
+            Rigidbody rb = GetComponent<Rigidbody>();
+            Collider col = GetComponent<Collider>();
+
+            if (rb == null || col == null)
+            {
+                Debug.LogError(
+                    "[TopDownVehicleController] Vehicle requires " +
+                    "a Rigidbody and a Collider.",
+                    this);
+
+                return false;
+            }
+
             context = new VehicleContext(
                 transform,
-                GetComponent<Rigidbody>(),
-                GetComponent<Collider>(),
+                rb,
+                col,
                 vehicleConfig);
+
+            return true;
         }
 
         private void DiscoverSystems()
         {
+            systems.Clear();
+
             MonoBehaviour[] behaviours = GetComponents<MonoBehaviour>();
 
             foreach (MonoBehaviour behaviour in behaviours)
             {
+                if (behaviour == null || !behaviour.enabled)
+                    continue;
+
                 if (behaviour is IVehicleSystem system)
                 {
                     systems.Add(system);
@@ -129,6 +179,9 @@ namespace TopDownVehicleController.Vehicle
 
             foreach (MonoBehaviour behaviour in behaviours)
             {
+                if (behaviour == null)
+                    continue;
+
                 if (behaviour is IVehicleInputProvider provider)
                 {
                     inputProvider = provider;
@@ -137,7 +190,14 @@ namespace TopDownVehicleController.Vehicle
             }
 
             if (inputProvider == null)
+            {
+                Debug.LogWarning(
+                    "[TopDownVehicleController] No IVehicleInputProvider found. " +
+                    "The vehicle will initialize without an input provider.",
+                    this);
+
                 return;
+            }
 
             foreach (IVehicleSystem system in systems)
             {
@@ -148,12 +208,28 @@ namespace TopDownVehicleController.Vehicle
             }
         }
 
-        private void InitializeSystems()
+        private bool InitializeSystems()
         {
             foreach (IVehicleSystem system in systems)
             {
-                system.Initialize();
+                try
+                {
+                    system.Initialize();
+                }
+                catch (System.Exception exception)
+                {
+                    Debug.LogError(
+                        "[TopDownVehicleController] Failed to initialize " +
+                        $"vehicle system: {system.GetType().Name}",
+                        this);
+
+                    Debug.LogException(exception, this);
+
+                    return false;
+                }
             }
+
+            return true;
         }
 
         private void InjectMovementReference()
