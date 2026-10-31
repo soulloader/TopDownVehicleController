@@ -78,6 +78,31 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
             this.context = context;
         }
 
+        public bool TryGetContact(Transform suspensionPoint, out SuspensionContactData contact)
+        {
+            contact = default;
+
+            if (suspensionPoint == null ||
+                suspensionPoints == null ||
+                suspensionContacts == null)
+                return false;
+
+            for (int i = 0; i < suspensionPoints.Length; i++)
+            {
+                if (suspensionPoints[i] != suspensionPoint)
+                    continue;
+
+                if (i >= suspensionContacts.Length)
+                    return false;
+
+                contact = suspensionContacts[i];
+                return contact.IsGrounded;
+            }
+
+            return false;
+        }
+
+
         public void Initialize()
         {
             // NEW: Allocate contact storage once during initialization.
