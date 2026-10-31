@@ -2685,6 +2685,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3266097455820242070, guid: ec5b68cb33ccf2e42920888e7f542c56, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6651269343203525987}
+    - targetCorrespondingSourceObject: {fileID: 3266097455820242070, guid: ec5b68cb33ccf2e42920888e7f542c56, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6651269343203525988}
   m_SourcePrefab: {fileID: 100100000, guid: ec5b68cb33ccf2e42920888e7f542c56, type: 3}
 --- !u!4 &6651269343203525983 stripped
 Transform:
@@ -2739,6 +2742,32 @@ MonoBehaviour:
   turnScrollFactor: 0.25
   invertLeftDirection: 1
   invertRightDirection: 0
+--- !u!114 &6651269343203525988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 375225877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16dcc7303ff5a5c47899a09e40b65830, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  suspension: {fileID: 375225886}
+  frontLeft: {fileID: 1243361881}
+  backLeft: {fileID: 2117141830}
+  frontRight: {fileID: 1658206845}
+  backRight: {fileID: 1998129676}
+  trackMarkMaterial: {fileID: 2100000, guid: e9582309e7678b447960ec9e8c5cc66c, type: 2}
+  trackWidth: 0.5
+  segmentDistance: 0.15
+  groundOffset: 0.025
+  textureRepeatDistance: 0.5
+  maxSegments: 200
+  markLifetime: 10
+  fadeDuration: 3
+  maxConnectionDistance: 2
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
