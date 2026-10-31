@@ -8,8 +8,8 @@ using TopDownVehicleController.Vehicle.Systems.Suspension;
 namespace TopDownVehicleController.Vehicle.Systems.Effects
 {
     /// <summary>
-    /// Generates independent, continuous track marks using dynamic meshes.
-    /// Ground contacts are provided by VehicleSuspension.
+    /// Generates independent track marks with lifetime-based fading.
+    /// Uses suspension contacts without modifying vehicle physics.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class VehicleTrackMarks :
@@ -34,21 +34,76 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
         [SerializeField, Min(0.01f)] private float textureRepeatDistance = 0.5f;
         [SerializeField, Min(2)] private int maxSegments = 200;
 
+        [Header("Track Mark Lifetime")]
+        [SerializeField, Min(0.1f)] private float markLifetime = 10f;
+        [SerializeField, Min(0.01f)] private float fadeDuration = 3f;
+
+        [Header("Continuity")]
+        [SerializeField, Min(0.1f)] private float maxConnectionDistance = 2f;
+
         private VehicleContext context;
         private TrackStrip leftStrip;
         private TrackStrip rightStrip;
 
+        private struct TrackSample
+        {
+            public Vector3 Center;
+            public Vector3 Normal;
+            public Vector3 Forward;
+            public float Distance;
+
+            public TrackSample(
+                Vector3 center,
+                Vector3 normal,
+                Vector3 forward,
+                float distance)
+            {
+                Center = center;
+                Normal = normal;
+                Forward = forward;
+                Distance = distance;
+            }
+        }
+
+        private struct TrackSegment
+        {
+            public TrackSample Start;
+            public TrackSample End;
+            public float CreatedAt;
+
+            public TrackSegment(
+                TrackSample start,
+                TrackSample end,
+                float createdAt)
+            {
+                Start = start;
+                End = end;
+                CreatedAt = createdAt;
+            }
+        }
+
         private sealed class TrackStrip
         {
-            public readonly List<Vector3> Centers = new List<Vector3>();
-            public readonly List<Vector3> Normals = new List<Vector3>();
-            public readonly List<Vector3> Directions = new List<Vector3>();
-            public readonly List<float> Distances = new List<float>();
+            public readonly List<TrackSegment> Segments =
+                new List<TrackSegment>();
+
+            public readonly List<Vector3> Vertices =
+                new List<Vector3>();
+
+            public readonly List<Vector2> UVs =
+                new List<Vector2>();
+
+            public readonly List<Color32> Colors =
+                new List<Color32>();
+
+            public readonly List<int> Triangles =
+                new List<int>();
 
             public Mesh Mesh;
-            public MeshRenderer Renderer;
-            public bool HasPreviousPoint;
-            public Vector3 PreviousPoint;
+            public GameObject MeshObject;
+
+            public bool HasPreviousSample;
+            public TrackSample PreviousSample;
             public float TotalDistance;
         }
 
@@ -62,9 +117,12 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
             if (suspension == null)
                 suspension = GetComponent<VehicleSuspension>();
 
-            if (suspension == null ||
-                frontLeft == null || backLeft == null ||
-                frontRight == null || backRight == null ||
+            if (context == null ||
+                suspension == null ||
+                frontLeft == null ||
+                backLeft == null ||
+                frontRight == null ||
+                backRight == null ||
                 trackMarkMaterial == null)
             {
                 Debug.LogError(
@@ -86,8 +144,16 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
             if (context == null || leftStrip == null || rightStrip == null)
                 return;
 
-            UpdateStrip(leftStrip, frontLeft, backLeft);
-            UpdateStrip(rightStrip, frontRight, backRight);
+            float currentTime = Time.time;
+
+            UpdateStrip(leftStrip, frontLeft, backLeft, currentTime);
+            UpdateStrip(rightStrip, frontRight, backRight, currentTime);
+
+            UpdateLifetime(leftStrip, currentTime);
+            UpdateLifetime(rightStrip, currentTime);
+
+            RebuildMesh(leftStrip, currentTime);
+            RebuildMesh(rightStrip, currentTime);
         }
 
         public void LateTick() { }
@@ -95,8 +161,6 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
         private TrackStrip CreateStrip(string objectName)
         {
             GameObject stripObject = new GameObject(objectName);
-
-            // Keep the mesh in world space, independent of vehicle motion.
             stripObject.transform.position = Vector3.zero;
 
             MeshFilter filter = stripObject.AddComponent<MeshFilter>();
@@ -104,6 +168,7 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
 
             Mesh mesh = new Mesh();
             mesh.name = objectName;
+            mesh.MarkDynamic();
 
             filter.sharedMesh = mesh;
             renderer.sharedMaterial = trackMarkMaterial;
@@ -111,14 +176,15 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
             return new TrackStrip
             {
                 Mesh = mesh,
-                Renderer = renderer
+                MeshObject = stripObject
             };
         }
 
         private void UpdateStrip(
             TrackStrip strip,
             Transform frontPoint,
-            Transform backPoint)
+            Transform backPoint,
+            float currentTime)
         {
             bool frontGrounded = suspension.TryGetContact(
                 frontPoint, out SuspensionContactData frontContact);
@@ -128,125 +194,204 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
 
             if (!frontGrounded || !backGrounded)
             {
-                strip.HasPreviousPoint = false;
+                strip.HasPreviousSample = false;
                 return;
             }
 
-            Vector3 center = (frontContact.Point + backContact.Point) * 0.5f;
+            Vector3 center =
+                (frontContact.Point + backContact.Point) * 0.5f;
 
-            Vector3 normal = (
-                frontContact.Normal + backContact.Normal).normalized;
+            Vector3 normal =
+                frontContact.Normal + backContact.Normal;
 
             if (normal.sqrMagnitude < 0.001f)
                 normal = Vector3.up;
+            else
+                normal.Normalize();
 
             Vector3 forward = Vector3.ProjectOnPlane(
-                frontContact.Point - backContact.Point, normal).normalized;
+                frontContact.Point - backContact.Point,
+                normal);
 
             if (forward.sqrMagnitude < 0.001f)
+            {
                 forward = Vector3.ProjectOnPlane(
-                    context.Transform.forward, normal).normalized;
+                    context.Transform.forward,
+                    normal);
+            }
 
+            if (forward.sqrMagnitude < 0.001f)
+                return;
+
+            forward.Normalize();
             center += normal * groundOffset;
 
-            if (!strip.HasPreviousPoint)
+            if (!strip.HasPreviousSample)
             {
-                strip.PreviousPoint = center;
-                strip.HasPreviousPoint = true;
-                AddPoint(strip, center, normal, forward);
+                strip.PreviousSample = new TrackSample(
+                    center, normal, forward, strip.TotalDistance);
+
+                strip.HasPreviousSample = true;
                 return;
             }
 
-            float distance = Vector3.Distance(strip.PreviousPoint, center);
+            float distance = Vector3.Distance(
+                strip.PreviousSample.Center, center);
+
+            if (distance > maxConnectionDistance)
+            {
+                strip.HasPreviousSample = false;
+                return;
+            }
 
             if (distance < segmentDistance)
                 return;
 
             strip.TotalDistance += distance;
-            strip.PreviousPoint = center;
 
-            AddPoint(strip, center, normal, forward);
-            RebuildMesh(strip);
+            TrackSample currentSample = new TrackSample(
+                center,
+                normal,
+                forward,
+                strip.TotalDistance);
+
+            strip.Segments.Add(new TrackSegment(
+                strip.PreviousSample,
+                currentSample,
+                currentTime));
+
+            strip.PreviousSample = currentSample;
+
+            while (strip.Segments.Count > maxSegments)
+                strip.Segments.RemoveAt(0);
         }
 
-        private void AddPoint(
+        private void UpdateLifetime(
             TrackStrip strip,
-            Vector3 center,
-            Vector3 normal,
-            Vector3 forward)
+            float currentTime)
         {
-            strip.Centers.Add(center);
-            strip.Normals.Add(normal);
-            strip.Directions.Add(forward);
-            strip.Distances.Add(strip.TotalDistance);
+            float lifetime = Mathf.Max(0.1f, markLifetime);
 
-            int maxPoints = maxSegments + 1;
-
-            while (strip.Centers.Count > maxPoints)
+            while (strip.Segments.Count > 0)
             {
-                strip.Centers.RemoveAt(0);
-                strip.Normals.RemoveAt(0);
-                strip.Directions.RemoveAt(0);
-                strip.Distances.RemoveAt(0);
+                TrackSegment oldest = strip.Segments[0];
+
+                if (currentTime - oldest.CreatedAt < lifetime)
+                    break;
+
+                strip.Segments.RemoveAt(0);
             }
         }
 
-        private void RebuildMesh(TrackStrip strip)
+        private void RebuildMesh(
+            TrackStrip strip,
+            float currentTime)
         {
-            int count = strip.Centers.Count;
+            strip.Vertices.Clear();
+            strip.UVs.Clear();
+            strip.Colors.Clear();
+            strip.Triangles.Clear();
 
-            if (count < 2)
-                return;
+            float lifetime = Mathf.Max(0.1f, markLifetime);
+            float fade = Mathf.Clamp(
+                fadeDuration, 0.01f, lifetime);
 
-            Vector3[] vertices = new Vector3[count * 2];
-            Vector2[] uvs = new Vector2[count * 2];
-            int[] triangles = new int[(count - 1) * 6];
+            float fadeStart = lifetime - fade;
 
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < strip.Segments.Count; i++)
             {
-                Vector3 sideways = Vector3.Cross(
-                    strip.Normals[i], strip.Directions[i]).normalized;
+                TrackSegment segment = strip.Segments[i];
 
-                Vector3 offset = sideways * trackWidth * 0.5f;
+                float age = currentTime - segment.CreatedAt;
 
-                vertices[i * 2] = strip.Centers[i] - offset;
-                vertices[i * 2 + 1] = strip.Centers[i] + offset;
+                float alpha = age <= fadeStart
+                    ? 1f
+                    : Mathf.Clamp01((lifetime - age) / fade);
 
-                float v = strip.Distances[i] / textureRepeatDistance;
+                byte alphaByte = (byte)Mathf.RoundToInt(
+                    alpha * 255f);
 
-                uvs[i * 2] = new Vector2(0f, v);
-                uvs[i * 2 + 1] = new Vector2(1f, v);
-            }
+                Color32 vertexColor = new Color32(
+                    255, 255, 255, alphaByte);
 
-            for (int i = 0; i < count - 1; i++)
-            {
-                int vertexIndex = i * 2;
-                int triangleIndex = i * 6;
-
-                triangles[triangleIndex] = vertexIndex;
-                triangles[triangleIndex + 1] = vertexIndex + 2;
-                triangles[triangleIndex + 2] = vertexIndex + 1;
-
-                triangles[triangleIndex + 3] = vertexIndex + 1;
-                triangles[triangleIndex + 4] = vertexIndex + 2;
-                triangles[triangleIndex + 5] = vertexIndex + 3;
+                AddSegmentGeometry(
+                    strip, segment, vertexColor);
             }
 
             strip.Mesh.Clear();
-            strip.Mesh.vertices = vertices;
-            strip.Mesh.uv = uvs;
-            strip.Mesh.triangles = triangles;
-            strip.Mesh.RecalculateNormals();
+
+            if (strip.Vertices.Count == 0)
+                return;
+
+            strip.Mesh.SetVertices(strip.Vertices);
+            strip.Mesh.SetUVs(0, strip.UVs);
+            strip.Mesh.SetColors(strip.Colors);
+            strip.Mesh.SetTriangles(strip.Triangles, 0);
             strip.Mesh.RecalculateBounds();
+        }
+
+        private void AddSegmentGeometry(
+            TrackStrip strip,
+            TrackSegment segment,
+            Color32 color)
+        {
+            int vertexIndex = strip.Vertices.Count;
+
+            Vector3 startSide = Vector3.Cross(
+                segment.Start.Normal,
+                segment.Start.Forward).normalized;
+
+            Vector3 endSide = Vector3.Cross(
+                segment.End.Normal,
+                segment.End.Forward).normalized;
+
+            float halfWidth = trackWidth * 0.5f;
+
+            Vector3 startOffset = startSide * halfWidth;
+            Vector3 endOffset = endSide * halfWidth;
+
+            strip.Vertices.Add(
+                segment.Start.Center - startOffset);
+
+            strip.Vertices.Add(
+                segment.Start.Center + startOffset);
+
+            strip.Vertices.Add(
+                segment.End.Center - endOffset);
+
+            strip.Vertices.Add(
+                segment.End.Center + endOffset);
+
+            float startV =
+                segment.Start.Distance / textureRepeatDistance;
+
+            float endV =
+                segment.End.Distance / textureRepeatDistance;
+
+            strip.UVs.Add(new Vector2(0f, startV));
+            strip.UVs.Add(new Vector2(1f, startV));
+            strip.UVs.Add(new Vector2(0f, endV));
+            strip.UVs.Add(new Vector2(1f, endV));
+
+            for (int i = 0; i < 4; i++)
+                strip.Colors.Add(color);
+
+            strip.Triangles.Add(vertexIndex);
+            strip.Triangles.Add(vertexIndex + 2);
+            strip.Triangles.Add(vertexIndex + 1);
+
+            strip.Triangles.Add(vertexIndex + 1);
+            strip.Triangles.Add(vertexIndex + 2);
+            strip.Triangles.Add(vertexIndex + 3);
         }
 
         private void OnDisable()
         {
             if (leftStrip != null)
-                leftStrip.HasPreviousPoint = false;
+                leftStrip.HasPreviousSample = false;
 
             if (rightStrip != null)
-                rightStrip.HasPreviousPoint = false;
+                rightStrip.HasPreviousSample = false;
         }
 
         private void OnDestroy()
@@ -260,8 +405,8 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
             if (strip == null)
                 return;
 
-            if (strip.Renderer != null)
-                Destroy(strip.Renderer.gameObject);
+            if (strip.MeshObject != null)
+                Destroy(strip.MeshObject);
 
             if (strip.Mesh != null)
                 Destroy(strip.Mesh);
