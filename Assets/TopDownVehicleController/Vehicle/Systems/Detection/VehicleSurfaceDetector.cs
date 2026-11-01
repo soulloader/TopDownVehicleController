@@ -3,6 +3,7 @@ using UnityEngine;
 
 using TopDownVehicleController.Vehicle.Data;
 using TopDownVehicleController.Vehicle.Interfaces;
+using TopDownVehicleController.Vehicle.Systems.Suspension;
 
 namespace TopDownVehicleController.Vehicle.Systems.Detection
 {
@@ -15,6 +16,7 @@ namespace TopDownVehicleController.Vehicle.Systems.Detection
         IContextReceiver
     {
         private VehicleContext context;
+        private VehicleSuspension suspension;
 
         [Header("Surface Detection")]
 
@@ -35,6 +37,7 @@ namespace TopDownVehicleController.Vehicle.Systems.Detection
 
         public void Initialize()
         {
+            suspension = GetComponent<VehicleSuspension>();
         }
 
         public void Update()
@@ -55,12 +58,64 @@ namespace TopDownVehicleController.Vehicle.Systems.Detection
             if (context == null)
                 return;
 
+            SurfaceData detectedSurface = DetectContactSurface();
+
+            if (detectedSurface == null)
+                detectedSurface = DetectSurfaceBelow();
+
+            if (detectedSurface == currentSurface)
+                return;
+
+            Debug.Log(
+                $"[SurfaceDetector] Surface changed to: " +
+                $"{(detectedSurface != null ? detectedSurface.SurfaceType.ToString() : "NULL")}",
+                this);
+
+            currentSurface = detectedSurface;
+            OnSurfaceChanged?.Invoke(currentSurface);
+        }
+
+        private SurfaceData DetectContactSurface()
+        {
+            var contacts = suspension != null ? suspension.SuspensionContacts : null;
+            if (contacts == null)
+                return null;
+
+            SurfaceData detectedSurface = null;
+            float closestDistance = float.MaxValue;
+
+            foreach (var contact in contacts)
+            {
+                if (!contact.IsGrounded || contact.Collider == null ||
+                    contact.Collider.transform.IsChildOf(context.Transform))
+                    continue;
+
+                var surface = contact.Collider.GetComponentInParent<SurfaceData>();
+                if (surface == null)
+                    continue;
+
+                float distance = (contact.Point - context.Transform.position).sqrMagnitude;
+                if (distance >= closestDistance)
+                    continue;
+
+                closestDistance = distance;
+                detectedSurface = surface;
+            }
+
+            return detectedSurface;
+        }
+
+        private SurfaceData DetectSurfaceBelow()
+        {
             SurfaceData detectedSurface = null;
 
+            // Start above the chassis: a ray starting inside a ramp cannot hit it.
             RaycastHit[] hits = Physics.RaycastAll(
-                context.Transform.position,
+                context.Transform.position + Vector3.up * detectionDistance,
                 Vector3.down,
-                detectionDistance);
+                detectionDistance * 2f,
+                Physics.DefaultRaycastLayers,
+                QueryTriggerInteraction.Ignore);
 
             float closestDistance = float.MaxValue;
 
@@ -71,7 +126,7 @@ namespace TopDownVehicleController.Vehicle.Systems.Detection
                     continue;
 
                 SurfaceData surface =
-                    hit.collider.GetComponent<SurfaceData>();
+                    hit.collider.GetComponentInParent<SurfaceData>();
 
                 if (surface == null)
                     continue;
@@ -83,18 +138,13 @@ namespace TopDownVehicleController.Vehicle.Systems.Detection
                 detectedSurface = surface;
             }
 
-            if (detectedSurface == currentSurface)
-                return;
-
-            currentSurface = detectedSurface;
-
-            OnSurfaceChanged?.Invoke(currentSurface);
+            return detectedSurface;
         }
 
         private void OnDrawGizmosSelected()
         {
             Gizmos.DrawLine(
-                transform.position,
+                transform.position + Vector3.up * detectionDistance,
                 transform.position +
                 Vector3.down * detectionDistance);
         }

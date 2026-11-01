@@ -68,7 +68,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TrackTexture:
-        m_Texture: {fileID: 2800000, guid: b6f417eafed290544b5f502dc404b107, type: 3}
+        m_Texture: {fileID: 2800000, guid: 79873f5d497a47845924d37ccc2a065d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -102,7 +102,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _MarkOpacity: 0.76
+    - _MarkOpacity: 0.7
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005
@@ -119,7 +119,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.3301887, g: 0.26067156, b: 0.18534176, a: 1}
-    - _Base_Color: {r: 1, g: 1, b: 1, a: 0.9843137}
+    - _Base_Color: {r: 0.6226415, g: 0.4511849, b: 0.22614807, a: 0.9843137}
     - _Color: {r: 0.33018863, g: 0.26067153, b: 0.18534172, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}

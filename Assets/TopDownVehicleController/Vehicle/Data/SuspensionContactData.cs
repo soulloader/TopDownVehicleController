@@ -10,15 +10,18 @@ namespace TopDownVehicleController.Vehicle.Data
         public bool IsGrounded { get; }
         public Vector3 Point { get; }
         public Vector3 Normal { get; }
+        public Collider Collider { get; }
 
         public SuspensionContactData(
             bool isGrounded,
             Vector3 point,
-            Vector3 normal)
+            Vector3 normal,
+            Collider collider)
         {
             IsGrounded = isGrounded;
             Point = point;
             Normal = normal;
+            Collider = collider;
         }
     }
 }

@@ -1,9 +1,10 @@
-
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 using TopDownVehicleController.Vehicle.Data;
 using TopDownVehicleController.Vehicle.Interfaces;
 using TopDownVehicleController.Vehicle.Systems.Suspension;
+using TopDownVehicleController.Vehicle.Configurations;
+using TopDownVehicleController.Vehicle.Systems.Detection;
 
 namespace TopDownVehicleController.Vehicle.Systems.Effects
 {
@@ -15,6 +16,10 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
     public sealed class VehicleTrackMarks :
         MonoBehaviour, IVehicleSystem, IContextReceiver
     {
+        [Header("Surface Track Marks")]
+        [SerializeField] private VehicleSurfaceDetector surfaceDetector;
+        [SerializeField] private TrackMarkSurfaceProfile surfaceProfile;
+
         [Header("Suspension")]
         [SerializeField] private VehicleSuspension suspension;
 
@@ -70,15 +75,15 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
             public TrackSample Start;
             public TrackSample End;
             public float CreatedAt;
+            public Color32 Color;
 
-            public TrackSegment(
-                TrackSample start,
-                TrackSample end,
-                float createdAt)
+            public TrackSegment(TrackSample start, TrackSample end,
+            float createdAt, Color32 color)
             {
                 Start = start;
                 End = end;
                 CreatedAt = createdAt;
+                Color = color;
             }
         }
 
@@ -255,10 +260,40 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
                 forward,
                 strip.TotalDistance);
 
+            Color32 markColor = new Color32(255, 255, 255, 255);
+
+            if (surfaceDetector != null && surfaceDetector.CurrentSurface == null)
+            {
+                strip.HasPreviousSample = false;
+                return;
+            }
+
+            if (surfaceDetector != null &&
+                surfaceProfile != null &&
+                surfaceDetector.CurrentSurface != null)
+            {
+                SurfaceType surfaceType =
+                    surfaceDetector.CurrentSurface.SurfaceType;
+
+                if (surfaceProfile.TryGetSettings(
+                    surfaceType,
+                    out TrackMarkSurfaceProfile.SurfaceMarkSettings settings))
+                {
+                    if (!settings.EnableMarks)
+                    {
+                        strip.HasPreviousSample = false;
+                        return;
+                    }
+
+                    markColor = settings.Color;
+                }
+            }
+
             strip.Segments.Add(new TrackSegment(
                 strip.PreviousSample,
                 currentSample,
-                currentTime));
+                currentTime,
+                markColor));
 
             strip.PreviousSample = currentSample;
 
@@ -297,6 +332,7 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
                 fadeDuration, 0.01f, lifetime);
 
             float fadeStart = lifetime - fade;
+            int capacityFadeSegments = Mathf.Max(1, Mathf.CeilToInt(maxSegments * 0.15f));
 
             for (int i = 0; i < strip.Segments.Count; i++)
             {
@@ -308,11 +344,14 @@ namespace TopDownVehicleController.Vehicle.Systems.Effects
                     ? 1f
                     : Mathf.Clamp01((lifetime - age) / fade);
 
-                byte alphaByte = (byte)Mathf.RoundToInt(
-                    alpha * 255f);
+                // Fade the oldest marks before the segment budget evicts them.
+                float capacityAlpha = Mathf.Clamp01(
+                    (maxSegments - strip.Segments.Count + i) / (float)capacityFadeSegments);
+                alpha = Mathf.Min(alpha, capacityAlpha);
 
-                Color32 vertexColor = new Color32(
-                    255, 255, 255, alphaByte);
+                Color32 vertexColor = segment.Color;
+                // Surface profiles supply RGB tint; lifetime owns vertex opacity.
+                vertexColor.a = (byte)Mathf.RoundToInt(255f * alpha);
 
                 AddSegmentGeometry(
                     strip, segment, vertexColor);

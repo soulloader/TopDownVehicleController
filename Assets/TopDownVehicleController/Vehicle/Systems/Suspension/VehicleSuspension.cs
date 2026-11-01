@@ -150,9 +150,8 @@ namespace TopDownVehicleController.Vehicle.Systems.Suspension
                     suspensionCollisionLayers);
 
                 // NEW: Save ground contact without additional raycasts.
-                suspensionContacts[i] = grounded
-                    ? new SuspensionContactData(true, hit.point, hit.normal)
-                    : default;
+                suspensionContacts[i] = grounded ? new SuspensionContactData(true,
+                    hit.point, hit.normal, hit.collider) : default;
 
                 if (grounded)
                 {
